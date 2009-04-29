@@ -27,14 +27,30 @@ module Things
       @type_id ||= @xml_node.at("/attribute[@name='focustype']").inner_text
     end
     
+    def focustodos
+      if focustodosnode = @xml_node.at("/relationship[@name='focustodos'][@idrefs]") 
+        @focustodos ||= focustodosnode.attributes['idrefs'].split
+      else
+        @focustodos = []
+      end
+    end
+    
     def tasks(options = {})
       options ||= {} # when options == nil
       
-      selector = "//object[@type='TODO']/attribute[@name='focustype'][text()='#{type_id}']/.."
-      @all_tasks ||= @doc.search(selector).map do |task_xml|
+      @all_tasks ||=  focustodos.map do |focustodoid|
+        selector = "//object[@id = '#{focustodoid}'][@type='TODO']"
+        task_xml = @doc.search(selector)
         Task.new(task_xml, @doc)
       end
-
+      
+      if(@all_tasks.empty?)      
+        selector = "//object[@type='TODO']/attribute[@name='focustype'][text()='#{type_id}']/.."
+        @all_tasks = @doc.search(selector).map do |task_xml|
+            Task.new(task_xml, @doc)
+        end
+      end
+     
       filter_tasks!(options)
       
       @tasks.sort_by &:position

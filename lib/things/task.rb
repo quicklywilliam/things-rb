@@ -14,6 +14,14 @@ module Things
     def title
       @xml_node.at("attribute[@name='title']").inner_text
     end
+    
+    def tickledate
+      if(@xml_node.at("attribute[@name='tickledate']"))
+        Time.at(978307200.0 + @xml_node.at("attribute[@name='tickledate']").inner_text.to_f)
+      else
+        nil
+      end
+    end
 
     alias_method :to_s, :title
 
